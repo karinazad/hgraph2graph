@@ -81,12 +81,12 @@ if __name__ == "__main__":
     lg.setLevel(rdkit.RDLogger.CRITICAL)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--train', required=True)
-    parser.add_argument('--vocab', required=True)
+    parser.add_argument('--train', required=False, default="data/logP/active.txt")
+    parser.add_argument('--vocab', required=False, default="data/chembl/vocab.txt", )
     parser.add_argument('--atom_vocab', default=common_atom_vocab)
-    parser.add_argument('--save_dir', required=True)
-    parser.add_argument('--generative_model', required=True)
-    parser.add_argument('--chemprop_model', required=True)
+    parser.add_argument('--save_dir', required=False, default="ckpt/finetune/logP")
+    parser.add_argument('--generative_model', required=False, default="ckpt/chembl-pretrained/model.ckpt")
+    parser.add_argument('--chemprop_model', required=False, default="chemprop/logP/fold_0/model_0/model.pt")
     parser.add_argument('--seed', type=int, default=7)
 
     parser.add_argument('--rnn_type', type=str, default='LSTM')
@@ -103,11 +103,13 @@ if __name__ == "__main__":
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--clip_norm', type=float, default=5.0)
     parser.add_argument('--epoch', type=int, default=10)
-    parser.add_argument('--inner_epoch', type=int, default=10)
+    parser.add_argument('--inner_epoch', type=int, default=1)
     parser.add_argument('--threshold', type=float, default=0.3)
     parser.add_argument('--min_similarity', type=float, default=0.1)
     parser.add_argument('--max_similarity', type=float, default=0.5)
     parser.add_argument('--nsample', type=int, default=10000)
+
+    parser.add_argument('--model', default="ckpt/chembl-pretrained/model.ckpt", required=False)
 
     args = parser.parse_args()
     print(args)
@@ -119,7 +121,7 @@ if __name__ == "__main__":
         train_smiles = [line.strip("\r\n ") for line in f]
 
     vocab = [x.strip("\r\n ").split() for x in open(args.vocab)] 
-    args.vocab = PairVocab(vocab)
+    args.vocab = PairVocab(vocab, cuda=False)
 
     score_func = Chemprop(args.chemprop_model)
     good_smiles = train_smiles
@@ -130,7 +132,7 @@ if __name__ == "__main__":
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
     print('Loading from checkpoint ' + args.generative_model)
-    model_state, optimizer_state, _, beta = torch.load(args.generative_model)
+    model_state, optimizer_state, _, beta = torch.load(args.generative_model, map_location=torch.device('cpu'))
     model.load_state_dict(model_state)
     optimizer.load_state_dict(optimizer_state)
 

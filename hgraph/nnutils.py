@@ -8,10 +8,10 @@ def index_select_ND(source, dim, index):
     final_size = index_size + suffix_dim
     target = source.index_select(dim, index.view(-1))
     return target.view(final_size)
-
-def avg_pool(all_vecs, scope, dim):
-    size = create_var(torch.Tensor([le for _,le in scope]))
-    return all_vecs.sum(dim=dim) / size.unsqueeze(-1)
+#
+# def avg_pool(all_vecs, scope, dim):
+#     size = create_var(torch.Tensor([le for _,le in scope]))
+#     return all_vecs.sum(dim=dim) / size.unsqueeze(-1)
 
 def get_accuracy_bin(scores, labels):
     preds = torch.ge(scores, 0).long()
@@ -48,7 +48,7 @@ def zip_tensors(tup_list):
     tup_list = zip(*tup_list)
     for a in tup_list:
         if type(a[0]) is int: 
-            res.append( torch.LongTensor(a).cuda() )
+            res.append( torch.LongTensor(a))#.cuda() )
         else:
             res.append( torch.stack(a, dim=0) )
     return res
